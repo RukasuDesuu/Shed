@@ -16,6 +16,7 @@ bot.
 from functools import update_wrapper
 import logging
 
+#pip3 install python-telegram-bot
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
@@ -26,9 +27,12 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-permID = ["1936859631", "1218128630"]
+IDArchive = open("ids.txt")
+permID = IDArchive.read().splitlines()
+IDArchive.close()
+print(permID)
 
-chaveObj = ["cortina", "led"]
+chaveObj = ["cortina", "led", "luz"]
 
 
 def trust(id):
@@ -89,6 +93,7 @@ def main() -> None:
     token = tokenArchive.read()
     tokenArchive.close()
     updater = Updater(token)
+
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
