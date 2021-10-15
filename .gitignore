@@ -1,3 +1,6 @@
 #Ignore Tokens and IDs for security
 ids.txt
 token.txt
+
+#Ignore Virtual Enviroment folder
+ShedPy/venv/
