@@ -27,7 +27,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-IDArchive = open("ids.txt")
+IDArchive = open("ids.txt", "r")
 permID = IDArchive.read().splitlines()
 IDArchive.close()
 print(permID)
