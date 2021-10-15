@@ -15,7 +15,7 @@ void setup() {
 
 
 void loop() {
-  Serial.println(inputString);
+  Serial.println(inputString);  
   if (stringComplete){ 
     Serial.print("Running..."); 
     Serial.print(inputString); 
