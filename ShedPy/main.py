@@ -11,11 +11,44 @@ import threading
 import serial
 import time
 
-conectado = False #variável booleana para condição de conexão do arduino
-porta = 'COM3' #Variável para porta serial do arduino
-velocidadeBaud = 9600 #Variável para velocidade de envio na porta serial
+conected = False 
+port = 'COM3' 
+velBaud = 9600
 
+receivedMessages = 1
+offArduinoThread = False 
+receivedText = "" 
 
+try: 
+    SerialArduino = serial.Serial(port,velBaud, timeout = 0.2) 
+except: 
+    print("Verificar porta serial ou religar Arduino") 
+
+def handle_data(data):  
+    global receivedMessages, receivedText
+    print("Recebi " + str(receivedMessages) + ": " + data) 
+    
+    receivedMessages += 1 
+    textoRecebido = data 
+
+def read_from_port(ser): 
+    global conected, offArduinoThread 
+    while not conected: 
+        conectado = True 
+
+        while True: #Loop 'infinito'
+           reading = ser.readline().decode() 
+           if reading != "": 
+               handle_data(reading)
+           if offArduinoThread: 
+               print("Desligando Arduino")
+               break 
+
+readSerialThread = threading.Thread(target=read_from_port, args=(SerialArduino,)) 
+readSerialThread.start()
+print("Preparando Arduino") 
+time.sleep(2) 
+print("Arduino Pronto") 
 
 # Enable logging
 logging.basicConfig(
@@ -85,8 +118,12 @@ def signal(update: Update, context: CallbackContext) -> None:
                 break
         if not Bobj:
             update.message.reply_text("Erro!\nObjeto não declarado ou nao disponivel :(")
-
+        SerialArduino.write((cond + " " + obj + '\n').encode())
         update.message.reply_text(cond +" "+ obj)
+
+        offArduinoThread = True 
+        SerialArduino.close() 
+        readSerialThread.join() 
     else:
         update.message.reply_text("Acesso Negado!!")
         
