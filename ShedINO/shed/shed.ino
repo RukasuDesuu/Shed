@@ -1,39 +1,50 @@
 String inputString = ""; 
 bool stringComplete = false; 
-#define pa 2 
-#define pv 3 
-#define pc 4
-#define pg 5 
+#define led 2
 
+String chaveObj[] = {"cortina", "led", "luz"};
+int chavesSize = 3;
+bool bCond = false;
+bool bObj= false;
 
 void setup() {
   Serial.begin(9600); 
   inputString.reserve(200);
-  
-  pinMode(pa, OUTPUT);
-  pinMode(pv, OUTPUT);
-  pinMode(pc, OUTPUT);
-  pinMode(pg, OUTPUT);
+  pinMode(led, OUTPUT);
 }
 
 
 void loop() {
+  Serial.println(inputString);
   if (stringComplete){ 
     Serial.print("Running..."); 
     Serial.print(inputString); 
-
-  inputString = ""; //Esvazia a variavel de texto
-  stringComplete = false; //texto volta a ser incompleto
+  if ((inputString.startsWith("Abrindo/Ligando"))){
+     bCond = true;
+  }
+  for (int t =0; t <= chavesSize; t++){
+    if ((inputString.endsWith(chaveObj[t]))){
+      bObj = true;
+    }
+  }
+  if (bObj == true){
+    if ((inputString.endsWith("led"))){
+      digitalWrite(led, bCond);
+      Serial.println("Ligou");
+    } 
+  }
+  inputString = ""; 
+  stringComplete = false; 
   }
 }
 
 //Evento que ocorre toda vez após o void loop
 void serialEvent(){ 
-  while (Serial.available()){ //Enquanto houver entrada pendente no monitor serial
-    char inChar = (char)Serial.read(); //Pega cada caractere recebido no monitor serial
-    inputString += inChar; //Adiciona cada caractere até completar o texto
-    if (inChar == '\n'){ //Quando houver quebra de linha:
-      stringComplete = true; //O texto esta completo
+  while (Serial.available()){ 
+    char inChar = (char)Serial.read(); 
+    inputString += inChar; 
+    if (inChar == '\n'){ 
+      stringComplete = true;
     }
   }
 }

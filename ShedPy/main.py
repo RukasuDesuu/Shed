@@ -1,5 +1,6 @@
 from functools import update_wrapper
 import logging
+from serial.serialwin32 import Serial
 
 #libraries for telegram bot
 #pip3 install python-telegram-bot
@@ -20,32 +21,38 @@ offArduinoThread = False
 receivedText = "" 
 
 try: 
-    SerialArduino = serial.Serial(port,velBaud, timeout = 0.2) 
+    SerialArduino = serial.Serial(port,velBaud, timeout = 0.5) 
 except: 
     print("Verificar porta serial ou religar Arduino") 
 
-def handle_data(data):  
-    global receivedMessages, receivedText
-    print("Recebi " + str(receivedMessages) + ": " + data) 
+#def handle_data(data):  
+    #global receivedMessages, receivedText
+    #print("Recebi " + str(receivedMessages) + ": " + data) 
     
-    receivedMessages += 1 
-    textoRecebido = data 
+    #receivedMessages += 1 
+    #receivedText = data 
 
 def read_from_port(ser): 
     global conected, offArduinoThread 
     while not conected: 
-        conectado = True 
+        conected = True 
+        
+        #while True:
+           #reading = ser.readline().decode()
+           #if reading != "": 
+               #handle_data(reading)
+        if offArduinoThread: 
+            print("Desligando Arduino")
+            break 
 
-        while True: #Loop 'infinito'
-           reading = ser.readline().decode() 
-           if reading != "": 
-               handle_data(reading)
-           if offArduinoThread: 
-               print("Desligando Arduino")
-               break 
+
 
 readSerialThread = threading.Thread(target=read_from_port, args=(SerialArduino,)) 
 readSerialThread.start()
+
+readSerialThread.join() 
+print (SerialArduino.read().decode())
+
 print("Preparando Arduino") 
 time.sleep(2) 
 print("Arduino Pronto") 
@@ -58,6 +65,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 chaveObj = ["cortina", "led", "luz"]
+
 
 def TeleTokens(path, shoudSplit):
     archive = open(path, "r+")
@@ -93,13 +101,14 @@ def start(update: Update, context: CallbackContext) -> None:
 def help_command(update: Update, context: CallbackContext) -> None:
     id = update.effective_user.id
     if trust(id):
-        update.message.reply_text("Palavras Chaves para condições: Abrir, Fechar, Ligar, Desligar \nPalavras Chaves para objetos: cortina, led, ")
+        update.message.reply_text("Palavras Chaves para condições: Abrir, Fechar, Ligar, Desligar \nPalavras Chaves para objetos: " + chaveObj)
         update.message.reply_text("Basta enviar uma mensagem com uma palavra chave de condição e do objeto!")
     else:
         update.message.reply_text("Acesso Negado!!")
 
 
 def signal(update: Update, context: CallbackContext) -> None:
+    Bobj = False
     id = update.effective_user.id
     print(id)
     msg = update.message.text.lower()
@@ -118,12 +127,14 @@ def signal(update: Update, context: CallbackContext) -> None:
                 break
         if not Bobj:
             update.message.reply_text("Erro!\nObjeto não declarado ou nao disponivel :(")
-        SerialArduino.write((cond + " " + obj + '\n').encode())
-        update.message.reply_text(cond +" "+ obj)
 
-        offArduinoThread = True 
-        SerialArduino.close() 
-        readSerialThread.join() 
+        if Bobj and cond != "":
+            SerialArduino.write((cond + " " + obj + '\n').encode())
+            offArduinoThread = True 
+            #SerialArduino.close() 
+            readSerialThread.join() 
+            print (SerialArduino.read())
+            update.message.reply_text(cond +" "+ obj)
     else:
         update.message.reply_text("Acesso Negado!!")
         
